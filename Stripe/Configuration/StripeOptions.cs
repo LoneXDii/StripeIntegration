@@ -8,4 +8,5 @@ public class StripeOptions
     public string SessionMode { get; set; }
     public string SuccessUrl { get; set; }
     public string CancelUrl { get; set; }
+    public string CustomerPortalUrl { get; set; }
 }

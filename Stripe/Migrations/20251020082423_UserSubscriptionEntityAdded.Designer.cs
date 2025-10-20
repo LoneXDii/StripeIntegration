@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stripe.Database;
@@ -11,9 +12,11 @@ using Stripe.Database;
 namespace Stripe.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251020082423_UserSubscriptionEntityAdded")]
+    partial class UserSubscriptionEntityAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,15 +166,14 @@ namespace Stripe.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<double>("Price")
                         .HasColumnType("double precision");
 
                     b.Property<string>("StripePriceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("StripeProductId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -184,24 +186,21 @@ namespace Stripe.Migrations
                             Id = 1,
                             Name = "TestSubscriptionMonthly-1",
                             Price = 10.0,
-                            StripePriceId = "price_1SJDObCLnke0wpITy9PHxVxK",
-                            StripeProductId = "prod_TFiqgpwQsYS69k"
+                            StripePriceId = "price_1SJDObCLnke0wpITy9PHxVxK"
                         },
                         new
                         {
                             Id = 2,
                             Name = "TestSubscriptionMonthly-2",
                             Price = 15.0,
-                            StripePriceId = "price_1SJDOtCLnke0wpITTywacmtv",
-                            StripeProductId = "prod_TFiqBLnYKGafcO"
+                            StripePriceId = "price_1SJDOtCLnke0wpITTywacmtv"
                         },
                         new
                         {
                             Id = 3,
                             Name = "TestSubscriptionYearly-1",
                             Price = 50.0,
-                            StripePriceId = "price_1SJDPHCLnke0wpITkJq26ra0",
-                            StripeProductId = "prod_TFiqRZlgyUG3cJ"
+                            StripePriceId = "price_1SJDPHCLnke0wpITkJq26ra0"
                         });
                 });
 
@@ -225,9 +224,11 @@ namespace Stripe.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -280,7 +281,7 @@ namespace Stripe.Migrations
 
             modelBuilder.Entity("Stripe.Database.Entities.UserSubscription", b =>
                 {
-                    b.Property<string>("StripeSubscriptionId")
+                    b.Property<string>("UserId")
                         .HasColumnType("text");
 
                     b.Property<int>("SubscriptionId")
@@ -289,15 +290,9 @@ namespace Stripe.Migrations
                     b.Property<int>("SubscriptionStatus")
                         .HasColumnType("integer");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("StripeSubscriptionId");
+                    b.HasKey("UserId", "SubscriptionId");
 
                     b.HasIndex("SubscriptionId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("UserSubscriptions");
                 });
