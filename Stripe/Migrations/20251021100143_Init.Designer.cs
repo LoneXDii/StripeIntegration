@@ -12,7 +12,7 @@ using Stripe.DataAccess;
 namespace Stripe.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251021091235_Init")]
+    [Migration("20251021100143_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -288,6 +288,12 @@ namespace Stripe.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefreshTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");

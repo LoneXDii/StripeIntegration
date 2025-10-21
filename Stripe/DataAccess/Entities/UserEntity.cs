@@ -3,8 +3,10 @@ namespace Stripe.DataAccess.Entities;
 
 public class UserEntity : IdentityUser
 {
-    public string FirstName { get; set; } = null!;
-    public string LastName { get; set; } = null!;
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
     public string? StripeId { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
     public ICollection<SubscriptionEntity> Subscriptions { get; set; }
 }

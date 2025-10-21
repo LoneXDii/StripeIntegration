@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Stripe.Dto;
 using Stripe.Services.Interfaces;
 
@@ -33,5 +35,26 @@ public class AccountController : ControllerBase
         var result = await _userService.RegisterAsync(registrationDto, cancellationToken);
         
         return Ok(result);
+    }
+
+    [HttpGet("logout")]
+    [Authorize]
+    public async Task<IActionResult> LogoutAsync(CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+        await _userService.LogoutAsync(userId, cancellationToken);
+        
+        return Ok();
+    }
+
+    [HttpGet("tokens/refresh")]
+    public async Task<IActionResult> RefreshAccessTokenAsync(
+        [FromQuery] string refreshToken,
+        CancellationToken cancellationToken)
+    {
+        var tokens = await _userService.RefreshAccessTokenAsync(refreshToken, cancellationToken);
+        
+        return Ok(tokens);
     }
 }

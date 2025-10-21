@@ -5,5 +5,7 @@ namespace Stripe.Services.Interfaces;
 
 public interface ITokenService
 {
-    TokensDto GetTokens(UserEntity user);
+    Task<TokensDto> GetTokensAsync(UserEntity user);
+    Task<TokensDto?> RefreshAccessTokenAsync(string refreshToken);
+    Task RevokeRefreshTokenAsync(UserEntity user);
 }

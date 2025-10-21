@@ -26,7 +26,8 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
             
-        services.Configure<StripeOptions>(options => configuration.GetSection("Stripe").Bind(options));
+        services.Configure<StripeOptions>(options => configuration.GetSection("Stripe").Bind(options))
+            .Configure<JwtOptions>(options => configuration.GetSection("Jwt").Bind(options));
         
         StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
         

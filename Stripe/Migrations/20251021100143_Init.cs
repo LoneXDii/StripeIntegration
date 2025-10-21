@@ -36,6 +36,8 @@ namespace Stripe.Migrations
                     FirstName = table.Column<string>(type: "text", nullable: true),
                     LastName = table.Column<string>(type: "text", nullable: true),
                     StripeId = table.Column<string>(type: "text", nullable: true),
+                    RefreshToken = table.Column<string>(type: "text", nullable: true),
+                    RefreshTokenExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
