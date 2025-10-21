@@ -12,35 +12,21 @@ namespace Stripe.Controllers;
 public class SubscriptionController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;
-    private readonly string _customerPortalUrl;
 
-    public SubscriptionController(
-        IOptions<StripeOptions> stripeOptions,
-        ISubscriptionService subscriptionService)
+    public SubscriptionController(ISubscriptionService subscriptionService)
     {
         _subscriptionService = subscriptionService;
-        _customerPortalUrl = stripeOptions.Value.CustomerPortalUrl;
     }
 
     [HttpGet("{id:int}/payment")]
     [Authorize]
-    public async Task<ActionResult> BuySubscriptionAsync(
+    public async Task<ActionResult> GetPaymentUrlAsync(
         [FromRoute] int id,
         CancellationToken cancellationToken)
     {
-        var paymentUrl = await _subscriptionService.BuySubscriptionAsync(id, cancellationToken);
+        var paymentUrl = await _subscriptionService.GetPaymentUrlAsync(id, cancellationToken);
         
         return Redirect(paymentUrl);
-    }
-
-    [HttpGet("management")]
-    [Authorize]
-    public IActionResult ManageSubscriptions()
-    {
-        var email = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-        var url = $"{_customerPortalUrl}?prefilled_email={email}";
-        
-        return Redirect(url);
     }
     
     [HttpPost("webhook")]

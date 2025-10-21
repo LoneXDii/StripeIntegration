@@ -1,4 +1,4 @@
-﻿using Stripe.Database.Entities;
+﻿using Stripe.DataAccess.Entities;
 using Stripe.Dto;
 
 namespace Stripe.Services.Interfaces;

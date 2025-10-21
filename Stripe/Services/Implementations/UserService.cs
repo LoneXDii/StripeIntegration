@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
-using Stripe.Database.Entities;
+using Stripe.DataAccess.Entities;
 using Stripe.Dto;
 using Stripe.Exceptions;
 using Stripe.Services.Interfaces;

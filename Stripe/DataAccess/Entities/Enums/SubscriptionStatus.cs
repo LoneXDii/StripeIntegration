@@ -1,4 +1,4 @@
-﻿namespace Stripe.Database.Entities.Enums;
+﻿namespace Stripe.DataAccess.Entities.Enums;
 
 public enum SubscriptionStatus
 {

@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe.Checkout;
 using Stripe.Configuration;
-using Stripe.Database;
-using Stripe.Database.Entities;
+using Stripe.DataAccess;
+using Stripe.DataAccess.Entities;
 using Stripe.Services.Implementations;
 using Stripe.Services.Interfaces;
 
@@ -33,7 +33,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection RegisterServices(this IServiceCollection services)
+    public static IServiceCollection RegisterDependencies(this IServiceCollection services)
     {
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ITokenService, Services.Implementations.TokenService>();

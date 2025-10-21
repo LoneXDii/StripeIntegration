@@ -9,7 +9,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.ConfigureAuth(builder.Configuration);
-builder.Services.RegisterServices();
+builder.Services.RegisterDependencies();
 
 var app = builder.Build();
 

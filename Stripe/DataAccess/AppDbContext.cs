@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Stripe.Database.Entities;
+using Stripe.DataAccess.Entities;
 
-namespace Stripe.Database;
+namespace Stripe.DataAccess;
 
 public class AppDbContext : IdentityDbContext<UserEntity>
 {

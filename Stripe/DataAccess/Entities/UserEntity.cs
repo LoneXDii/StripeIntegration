@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-
-namespace Stripe.Database.Entities;
+namespace Stripe.DataAccess.Entities;
 
 public class UserEntity : IdentityUser
 {

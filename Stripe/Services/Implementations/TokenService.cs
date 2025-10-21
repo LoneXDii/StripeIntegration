@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Stripe.Database.Entities;
+using Stripe.DataAccess.Entities;
 using Stripe.Dto;
 using Stripe.Services.Interfaces;
 
@@ -32,9 +32,7 @@ public class TokenService : ITokenService
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.NameIdentifier , user.Id),
-            new("StripeId", user.StripeId ?? "")
+            new(ClaimTypes.NameIdentifier , user.Id)
         };
         
         var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));

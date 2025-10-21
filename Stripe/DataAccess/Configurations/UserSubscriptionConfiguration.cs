@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Stripe.Database.Entities;
+using Stripe.DataAccess.Entities;
 
-namespace Stripe.Database.Configurations;
+namespace Stripe.DataAccess.Configurations;
 
 public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription>
 {

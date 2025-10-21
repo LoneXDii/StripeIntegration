@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Stripe.Database;
+using Stripe.DataAccess;
 
 #nullable disable
 
 namespace Stripe.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251020082423_UserSubscriptionEntityAdded")]
-    partial class UserSubscriptionEntityAdded
+    [Migration("20251021091235_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -157,7 +157,43 @@ namespace Stripe.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Stripe.Database.Entities.SubscriptionEntity", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.PriceEntity", b =>
+                {
+                    b.Property<string>("StripePriceId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("BillingPeriod")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PriceUsd")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("StripePriceId");
+
+                    b.ToTable("PriceEntity");
+
+                    b.HasData(
+                        new
+                        {
+                            StripePriceId = "price_1SJDObCLnke0wpITy9PHxVxK",
+                            BillingPeriod = 2,
+                            PriceUsd = 10m
+                        },
+                        new
+                        {
+                            StripePriceId = "price_1SJDOtCLnke0wpITTywacmtv",
+                            BillingPeriod = 2,
+                            PriceUsd = 15m
+                        },
+                        new
+                        {
+                            StripePriceId = "price_1SJDPHCLnke0wpITkJq26ra0",
+                            BillingPeriod = 3,
+                            PriceUsd = 50m
+                        });
+                });
+
+            modelBuilder.Entity("Stripe.DataAccess.Entities.SubscriptionEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -166,17 +202,18 @@ namespace Stripe.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("Price")
-                        .HasColumnType("double precision");
+                    b.Property<string>("PriceId")
+                        .HasColumnType("text");
 
-                    b.Property<string>("StripePriceId")
-                        .IsRequired()
+                    b.Property<string>("StripeProductId")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PriceId")
+                        .IsUnique();
 
                     b.ToTable("Subscriptions");
 
@@ -185,26 +222,26 @@ namespace Stripe.Migrations
                         {
                             Id = 1,
                             Name = "TestSubscriptionMonthly-1",
-                            Price = 10.0,
-                            StripePriceId = "price_1SJDObCLnke0wpITy9PHxVxK"
+                            PriceId = "price_1SJDObCLnke0wpITy9PHxVxK",
+                            StripeProductId = "prod_TFiqgpwQsYS69k"
                         },
                         new
                         {
                             Id = 2,
                             Name = "TestSubscriptionMonthly-2",
-                            Price = 15.0,
-                            StripePriceId = "price_1SJDOtCLnke0wpITTywacmtv"
+                            PriceId = "price_1SJDOtCLnke0wpITTywacmtv",
+                            StripeProductId = "prod_TFiqBLnYKGafcO"
                         },
                         new
                         {
                             Id = 3,
                             Name = "TestSubscriptionYearly-1",
-                            Price = 50.0,
-                            StripePriceId = "price_1SJDPHCLnke0wpITkJq26ra0"
+                            PriceId = "price_1SJDPHCLnke0wpITkJq26ra0",
+                            StripeProductId = "prod_TFiqRZlgyUG3cJ"
                         });
                 });
 
-            modelBuilder.Entity("Stripe.Database.Entities.UserEntity", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.UserEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -224,11 +261,9 @@ namespace Stripe.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -279,9 +314,9 @@ namespace Stripe.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Stripe.Database.Entities.UserSubscription", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.UserSubscription", b =>
                 {
-                    b.Property<string>("UserId")
+                    b.Property<string>("StripeSubscriptionId")
                         .HasColumnType("text");
 
                     b.Property<int>("SubscriptionId")
@@ -290,9 +325,15 @@ namespace Stripe.Migrations
                     b.Property<int>("SubscriptionStatus")
                         .HasColumnType("integer");
 
-                    b.HasKey("UserId", "SubscriptionId");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("StripeSubscriptionId");
 
                     b.HasIndex("SubscriptionId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserSubscriptions");
                 });
@@ -308,7 +349,7 @@ namespace Stripe.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Stripe.Database.Entities.UserEntity", null)
+                    b.HasOne("Stripe.DataAccess.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -317,7 +358,7 @@ namespace Stripe.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Stripe.Database.Entities.UserEntity", null)
+                    b.HasOne("Stripe.DataAccess.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -332,7 +373,7 @@ namespace Stripe.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Stripe.Database.Entities.UserEntity", null)
+                    b.HasOne("Stripe.DataAccess.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -341,22 +382,31 @@ namespace Stripe.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Stripe.Database.Entities.UserEntity", null)
+                    b.HasOne("Stripe.DataAccess.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Stripe.Database.Entities.UserSubscription", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.SubscriptionEntity", b =>
                 {
-                    b.HasOne("Stripe.Database.Entities.SubscriptionEntity", "Subscription")
+                    b.HasOne("Stripe.DataAccess.Entities.PriceEntity", "Price")
+                        .WithOne("Subscription")
+                        .HasForeignKey("Stripe.DataAccess.Entities.SubscriptionEntity", "PriceId");
+
+                    b.Navigation("Price");
+                });
+
+            modelBuilder.Entity("Stripe.DataAccess.Entities.UserSubscription", b =>
+                {
+                    b.HasOne("Stripe.DataAccess.Entities.SubscriptionEntity", "Subscription")
                         .WithMany()
                         .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Stripe.Database.Entities.UserEntity", "User")
+                    b.HasOne("Stripe.DataAccess.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -365,6 +415,11 @@ namespace Stripe.Migrations
                     b.Navigation("Subscription");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Stripe.DataAccess.Entities.PriceEntity", b =>
+                {
+                    b.Navigation("Subscription");
                 });
 #pragma warning restore 612, 618
         }

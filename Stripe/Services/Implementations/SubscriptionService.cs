@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe.Configuration;
-using Stripe.Database;
-using Stripe.Database.Entities;
-using Stripe.Database.Entities.Enums;
+using Stripe.DataAccess;
+using Stripe.DataAccess.Entities;
+using Stripe.DataAccess.Entities.Enums;
 using Stripe.Exceptions;
 using Stripe.Services.Interfaces;
 
@@ -29,7 +29,7 @@ public class SubscriptionService : ISubscriptionService
         _stripeOptions = stripeOptions.Value;
     }
 
-    public async Task<string> BuySubscriptionAsync(int subscriptionId, CancellationToken cancellationToken)
+    public async Task<string> GetPaymentUrlAsync(int subscriptionId, CancellationToken cancellationToken)
     {
         var subscription = await _dbContext.Subscriptions
             .FirstOrDefaultAsync(subscription => subscription.Id == subscriptionId, cancellationToken);
@@ -47,7 +47,7 @@ public class SubscriptionService : ISubscriptionService
         }
         
         var paymentUrl = await _paymentService.GetPaymentUrlAsync(
-            subscription.StripePriceId,
+            subscription.PriceId,
             stripeCustomerId,
             cancellationToken);
         
@@ -101,7 +101,8 @@ public class SubscriptionService : ISubscriptionService
             SubscriptionStatus = SubscriptionStatus.Active,
         };
             
-        await _dbContext.UserSubscriptions.AddAsync(userSubscription, cancellationToken);
+        _dbContext.UserSubscriptions.Add(userSubscription);
+        
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
