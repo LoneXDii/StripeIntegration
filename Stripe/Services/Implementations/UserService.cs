@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Stripe.DataAccess.Entities;
 using Stripe.Dto;
 using Stripe.Exceptions;
@@ -13,20 +12,17 @@ public class UserService : IUserService
     private readonly UserManager<UserEntity> _userManager;
     private readonly CustomerService _customerService;
     private readonly ITokenService _tokenService;
-    private readonly IMapper _mapper;
 
     public UserService(
         SignInManager<UserEntity> signInManager,
         UserManager<UserEntity> userManager,
         CustomerService customerService,
-        ITokenService tokenService,
-        IMapper mapper)
+        ITokenService tokenService)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _customerService = customerService;
         _tokenService = tokenService;
-        _mapper = mapper;
     }
     
     public async Task<TokensDto> AuthenticateAsync(LoginDto loginDto, CancellationToken cancellationToken)
@@ -55,8 +51,14 @@ public class UserService : IUserService
         {
             throw new BadRequestException("Passwords do not match.");
         }
-        
-        var user = _mapper.Map<UserEntity>(registrationDto);
+
+        var user = new UserEntity
+        {
+            FirstName = registrationDto.FirstName,
+            LastName = registrationDto.LastName,
+            Email = registrationDto.Email,
+            UserName = registrationDto.Email,
+        };
         
         var customerOptions = new CustomerCreateOptions
         {

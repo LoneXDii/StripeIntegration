@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -43,8 +42,6 @@ public static class DependencyInjection
         
         services.AddScoped<SessionService>();
         services.AddScoped<CustomerService>();
-
-        services.AddAutoMapper(Assembly.GetExecutingAssembly());
         
         return services;
     }

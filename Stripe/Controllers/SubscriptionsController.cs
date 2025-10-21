@@ -26,7 +26,6 @@ public class SubscriptionController : ControllerBase
     {
         var paymentUrl = await _subscriptionService.GetPaymentUrlAsync(id, cancellationToken);
         
-        return Ok(paymentUrl);
         return Redirect(paymentUrl);
     }
     
