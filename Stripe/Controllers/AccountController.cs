@@ -16,6 +16,17 @@ public class AccountController : ControllerBase
     {
         _userService = userService;
     }
+
+    [HttpGet("subscription")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentSubscription(CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var subscription = await _userService.GetUserSubscriptionAsync(userId, cancellationToken);
+        
+        return Ok(subscription);
+    }
     
     [HttpPost("tokens/connect")]
     public async Task<IActionResult> LoginAsync(
@@ -48,9 +59,9 @@ public class AccountController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("tokens/refresh")]
+    [HttpPost("tokens/refresh")]
     public async Task<IActionResult> RefreshAccessTokenAsync(
-        [FromQuery] string refreshToken,
+        [FromBody] string refreshToken,
         CancellationToken cancellationToken)
     {
         var tokens = await _userService.RefreshAccessTokenAsync(refreshToken, cancellationToken);

@@ -12,8 +12,7 @@ public class UserSubscriptionEntity
     public DateTime? EndDateTimeUtc { get; set; }
     public string UserId { get; set; }
     public UserEntity? User { get; set; }
-    public int SubscriptionPlanId { get; set; }
-    public SubscriptionPlanEntity? SubscriptionPlan { get; set; }
     public int PriceId { get; set; }
     public PriceEntity? Price { get; set; }
+    public string StripePriceId { get; set; }
 }

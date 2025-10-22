@@ -97,31 +97,19 @@ internal class StripeService : IStripeService
 
     private async Task ProcessSubscriptionCreationAsync(Subscription subscription, CancellationToken cancellationToken)
     {
-        var isSubscriptionExists = await _dbContext.UserSubscriptions
-            .AnyAsync(s => s.StripeSubscriptionId == subscription.Id, cancellationToken);
-
-        if (isSubscriptionExists)
-        {
-            return;
-        }
-        
         var userId = await _dbContext.Users
             .Where(u => u.StripeId == subscription.CustomerId)
             .Select(u => u.Id)
             .FirstOrDefaultAsync(cancellationToken);
         
-        var priceId = subscription.Items.Data[0].Price.Id;
+        var stripePriceId = subscription.Items.Data[0].Price.Id;
         
-        var subscriptionPlanAndPriceIds = await _dbContext.Prices
-            .Where(p => p.StripePriceId == priceId)
-            .Select(p => new
-            {
-                PriceId = p.Id,
-                SubscriptionPlanId = p.SubscriptionPlanId,
-            })
+        var subscriptionPriceId = await _dbContext.Prices
+            .Where(p => p.StripePriceId == stripePriceId)
+            .Select(p =>  p.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (userId is null || subscriptionPlanAndPriceIds is null)
+        if (userId is null || subscriptionPriceId == 0)
         {
             return;
         }
@@ -134,8 +122,8 @@ internal class StripeService : IStripeService
             PeriodEndDateTimeUtc = subscription.CurrentPeriodEnd,
             EndDateTimeUtc = subscription.CancelAt,
             UserId = userId,
-            SubscriptionPlanId = subscriptionPlanAndPriceIds.SubscriptionPlanId,
-            PriceId = subscriptionPlanAndPriceIds.PriceId
+            PriceId = subscriptionPriceId,
+            StripePriceId = stripePriceId,
         };
 
         _dbContext.UserSubscriptions.Add(userSubscription);
@@ -150,32 +138,31 @@ internal class StripeService : IStripeService
 
         if (userSubscription is null)
         {
-            await ProcessSubscriptionCreationAsync(subscription, cancellationToken);
             return;
         }
         
-        var priceId = subscription.Items.Data[0].Price.Id;
-        
-        var subscriptionPlanAndPriceIds = await _dbContext.Prices
-            .Where(p => p.StripePriceId == priceId)
-            .Select(p => new
-            {
-                PriceId = p.Id,
-                SubscriptionPlanId = p.SubscriptionPlanId,
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-        
-        if (subscriptionPlanAndPriceIds is null)
+        var stripePriceId = subscription.Items.Data[0].Price.Id;
+
+        if (stripePriceId != userSubscription.StripePriceId)
         {
-            return;
+            var subscriptionPriceId = await _dbContext.Prices
+                .Where(p => p.StripePriceId == stripePriceId)
+                .Select(p => p.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (subscriptionPriceId == 0)
+            {
+                return;
+            }
+
+            userSubscription.PriceId = subscriptionPriceId;
+            userSubscription.StripePriceId = stripePriceId;
         }
 
         userSubscription.SubscriptionStatus = subscription.Status;
         userSubscription.StartDateTimeUtc = subscription.StartDate;
         userSubscription.PeriodEndDateTimeUtc = subscription.CurrentPeriodEnd;
         userSubscription.EndDateTimeUtc = subscription.CancelAt;
-        userSubscription.SubscriptionPlanId = subscriptionPlanAndPriceIds.SubscriptionPlanId;
-        userSubscription.PriceId = subscriptionPlanAndPriceIds.PriceId;
         
         await _dbContext.SaveChangesAsync(cancellationToken);
     }

@@ -27,7 +27,7 @@ public class SubscriptionService : ISubscriptionService
     public async Task<string> GetCheckoutUrlAsync(int subscriptionPriceId, string stripeCustomerId, CancellationToken cancellationToken)
     {
         var isUserAlreadySubscribed = await _dbContext.Users
-            .AnyAsync(u => u.StripeId == stripeCustomerId && u.UserSubscription == null, cancellationToken);
+            .AnyAsync(u => u.StripeId == stripeCustomerId && u.UserSubscription != null, cancellationToken);
 
         if (isUserAlreadySubscribed)
         {

@@ -12,7 +12,7 @@ using Stripe.DataAccess;
 namespace Stripe.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251022110232_Init")]
+    [Migration("20251022134054_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -387,11 +387,15 @@ namespace Stripe.Migrations
                     b.Property<DateTime>("StartDateTimeUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("StripePriceId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("StripeSubscriptionId")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SubscriptionPlanId")
+                    b.Property<int?>("SubscriptionPlanEntityId")
                         .HasColumnType("integer");
 
                     b.Property<string>("SubscriptionStatus")
@@ -406,7 +410,7 @@ namespace Stripe.Migrations
 
                     b.HasIndex("PriceId");
 
-                    b.HasIndex("SubscriptionPlanId");
+                    b.HasIndex("SubscriptionPlanEntityId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -484,11 +488,9 @@ namespace Stripe.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Stripe.DataAccess.Entities.SubscriptionPlanEntity", "SubscriptionPlan")
+                    b.HasOne("Stripe.DataAccess.Entities.SubscriptionPlanEntity", null)
                         .WithMany("UserSubscriptions")
-                        .HasForeignKey("SubscriptionPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SubscriptionPlanEntityId");
 
                     b.HasOne("Stripe.DataAccess.Entities.UserEntity", "User")
                         .WithOne("UserSubscription")
@@ -497,8 +499,6 @@ namespace Stripe.Migrations
                         .IsRequired();
 
                     b.Navigation("Price");
-
-                    b.Navigation("SubscriptionPlan");
 
                     b.Navigation("User");
                 });

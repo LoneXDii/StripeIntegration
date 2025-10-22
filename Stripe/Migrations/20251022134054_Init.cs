@@ -213,8 +213,9 @@ namespace Stripe.Migrations
                     PeriodEndDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    SubscriptionPlanId = table.Column<int>(type: "integer", nullable: false),
-                    PriceId = table.Column<int>(type: "integer", nullable: false)
+                    PriceId = table.Column<int>(type: "integer", nullable: false),
+                    StripePriceId = table.Column<string>(type: "text", nullable: false),
+                    SubscriptionPlanEntityId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -232,11 +233,10 @@ namespace Stripe.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserSubscriptions_SubscriptionPlans_SubscriptionPlanId",
-                        column: x => x.SubscriptionPlanId,
+                        name: "FK_UserSubscriptions_SubscriptionPlans_SubscriptionPlanEntityId",
+                        column: x => x.SubscriptionPlanEntityId,
                         principalTable: "SubscriptionPlans",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
@@ -310,9 +310,9 @@ namespace Stripe.Migrations
                 column: "PriceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserSubscriptions_SubscriptionPlanId",
+                name: "IX_UserSubscriptions_SubscriptionPlanEntityId",
                 table: "UserSubscriptions",
-                column: "SubscriptionPlanId");
+                column: "SubscriptionPlanEntityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserSubscriptions_UserId",

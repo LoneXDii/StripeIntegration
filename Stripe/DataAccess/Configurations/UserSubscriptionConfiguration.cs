@@ -8,13 +8,6 @@ public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscr
 {
     public void Configure(EntityTypeBuilder<UserSubscriptionEntity> builder)
     {
-        builder.HasKey(userSubscription => userSubscription.Id);
-        
-        builder
-            .HasOne(userSubscription => userSubscription.SubscriptionPlan)
-            .WithMany(subscriptionPlan => subscriptionPlan.UserSubscriptions)
-            .HasForeignKey(userSubscription => userSubscription.SubscriptionPlanId);
-        
         builder
             .HasOne(userSubscription => userSubscription.User)
             .WithOne(user => user.UserSubscription)

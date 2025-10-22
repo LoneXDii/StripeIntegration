@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Stripe.DataAccess;
 using Stripe.DataAccess.Entities;
 using Stripe.Dto;
 using Stripe.Exceptions;
@@ -12,17 +14,20 @@ public class UserService : IUserService
     private readonly UserManager<UserEntity> _userManager;
     private readonly CustomerService _customerService;
     private readonly ITokenService _tokenService;
+    private readonly IDbContext _dbContext;
 
     public UserService(
         SignInManager<UserEntity> signInManager,
         UserManager<UserEntity> userManager,
         CustomerService customerService,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IDbContext dbContext)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _customerService = customerService;
         _tokenService = tokenService;
+        _dbContext = dbContext;
     }
     
     public async Task<TokensDto> AuthenticateAsync(LoginDto loginDto, CancellationToken cancellationToken)
@@ -103,5 +108,30 @@ public class UserService : IUserService
         }
         
         return tokens;
+    }
+
+    public async Task<UserSubscriptionDto> GetUserSubscriptionAsync(string userId, CancellationToken cancellationToken)
+    {
+        var userSubscription = await _dbContext.UserSubscriptions
+            .Include(us => us.Price)
+            .ThenInclude(p => p.SubscriptionPlan)
+            .FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
+
+        if (userSubscription is null)
+        {
+            throw new NotFoundException("Specified user does not have a subscription.");
+        }
+
+        return new UserSubscriptionDto
+        {
+            SubscriptionPlanName = userSubscription.Price.SubscriptionPlan.Name,
+            Price = userSubscription.Price.Price,
+            Currency = userSubscription.Price.Currency,
+            BillingPeriod = userSubscription.Price.BillingPeriod,
+            Status = userSubscription.SubscriptionStatus,
+            StartDateTimeUtc = userSubscription.StartDateTimeUtc,
+            EndDateTimeUtc = userSubscription.EndDateTimeUtc,
+            PeriodEndDateTimeUtc = userSubscription.PeriodEndDateTimeUtc
+        };
     }
 }
