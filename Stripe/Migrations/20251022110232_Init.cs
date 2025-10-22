@@ -33,8 +33,8 @@ namespace Stripe.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: true),
-                    LastName = table.Column<string>(type: "text", nullable: true),
+                    FirstName = table.Column<string>(type: "text", nullable: false),
+                    LastName = table.Column<string>(type: "text", nullable: false),
                     StripeId = table.Column<string>(type: "text", nullable: true),
                     RefreshToken = table.Column<string>(type: "text", nullable: true),
                     RefreshTokenExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -59,16 +59,17 @@ namespace Stripe.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PriceEntity",
+                name: "SubscriptionPlans",
                 columns: table => new
                 {
-                    StripePriceId = table.Column<string>(type: "text", nullable: false),
-                    PriceUsd = table.Column<decimal>(type: "numeric", nullable: false),
-                    BillingPeriod = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    StripeProductId = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PriceEntity", x => x.StripePriceId);
+                    table.PrimaryKey("PK_SubscriptionPlans", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -178,37 +179,46 @@ namespace Stripe.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Subscriptions",
+                name: "Prices",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    StripeProductId = table.Column<string>(type: "text", nullable: true),
-                    Name = table.Column<string>(type: "text", nullable: true),
-                    PriceId = table.Column<string>(type: "text", nullable: true)
+                    StripePriceId = table.Column<string>(type: "text", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric", nullable: false),
+                    Currency = table.Column<string>(type: "text", nullable: false),
+                    BillingPeriod = table.Column<int>(type: "integer", nullable: false),
+                    SubscriptionPlanId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
+                    table.PrimaryKey("PK_Prices", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Subscriptions_PriceEntity_PriceId",
-                        column: x => x.PriceId,
-                        principalTable: "PriceEntity",
-                        principalColumn: "StripePriceId");
+                        name: "FK_Prices_SubscriptionPlans_SubscriptionPlanId",
+                        column: x => x.SubscriptionPlanId,
+                        principalTable: "SubscriptionPlans",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "UserSubscriptions",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     StripeSubscriptionId = table.Column<string>(type: "text", nullable: false),
+                    SubscriptionStatus = table.Column<string>(type: "text", nullable: false),
+                    StartDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PeriodEndDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    EndDateTimeUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    SubscriptionId = table.Column<int>(type: "integer", nullable: false),
-                    SubscriptionStatus = table.Column<int>(type: "integer", nullable: false)
+                    SubscriptionPlanId = table.Column<int>(type: "integer", nullable: false),
+                    PriceId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserSubscriptions", x => x.StripeSubscriptionId);
+                    table.PrimaryKey("PK_UserSubscriptions", x => x.Id);
                     table.ForeignKey(
                         name: "FK_UserSubscriptions_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -216,31 +226,40 @@ namespace Stripe.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserSubscriptions_Subscriptions_SubscriptionId",
-                        column: x => x.SubscriptionId,
-                        principalTable: "Subscriptions",
+                        name: "FK_UserSubscriptions_Prices_PriceId",
+                        column: x => x.PriceId,
+                        principalTable: "Prices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserSubscriptions_SubscriptionPlans_SubscriptionPlanId",
+                        column: x => x.SubscriptionPlanId,
+                        principalTable: "SubscriptionPlans",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
-                table: "PriceEntity",
-                columns: new[] { "StripePriceId", "BillingPeriod", "PriceUsd" },
+                table: "SubscriptionPlans",
+                columns: new[] { "Id", "Name", "StripeProductId" },
                 values: new object[,]
                 {
-                    { "price_1SJDObCLnke0wpITy9PHxVxK", 2, 10m },
-                    { "price_1SJDOtCLnke0wpITTywacmtv", 2, 15m },
-                    { "price_1SJDPHCLnke0wpITkJq26ra0", 3, 50m }
+                    { 1, "Base", "prod_TFiqRZlgyUG3cJ" },
+                    { 2, "Premium", "prod_TFiqgpwQsYS69k" },
+                    { 3, "Ultra", "prod_TFiqBLnYKGafcO" }
                 });
 
             migrationBuilder.InsertData(
-                table: "Subscriptions",
-                columns: new[] { "Id", "Name", "PriceId", "StripeProductId" },
+                table: "Prices",
+                columns: new[] { "Id", "BillingPeriod", "Currency", "Price", "StripePriceId", "SubscriptionPlanId" },
                 values: new object[,]
                 {
-                    { 1, "TestSubscriptionMonthly-1", "price_1SJDObCLnke0wpITy9PHxVxK", "prod_TFiqgpwQsYS69k" },
-                    { 2, "TestSubscriptionMonthly-2", "price_1SJDOtCLnke0wpITTywacmtv", "prod_TFiqBLnYKGafcO" },
-                    { 3, "TestSubscriptionYearly-1", "price_1SJDPHCLnke0wpITkJq26ra0", "prod_TFiqRZlgyUG3cJ" }
+                    { 1, 2, "USD", 5m, "price_1SKy0qCLnke0wpIT5p6NYVQw", 1 },
+                    { 2, 3, "USD", 50m, "price_1SJDPHCLnke0wpITkJq26ra0", 1 },
+                    { 3, 2, "USD", 10m, "price_1SJDObCLnke0wpITy9PHxVxK", 2 },
+                    { 4, 3, "USD", 100m, "price_1SKy3hCLnke0wpITi2xo7uBT", 2 },
+                    { 5, 2, "USD", 15m, "price_1SJDOtCLnke0wpITTywacmtv", 3 },
+                    { 6, 3, "USD", 150m, "price_1SKy34CLnke0wpITpjafca5U", 3 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -281,20 +300,25 @@ namespace Stripe.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Subscriptions_PriceId",
-                table: "Subscriptions",
-                column: "PriceId",
-                unique: true);
+                name: "IX_Prices_SubscriptionPlanId",
+                table: "Prices",
+                column: "SubscriptionPlanId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserSubscriptions_SubscriptionId",
+                name: "IX_UserSubscriptions_PriceId",
                 table: "UserSubscriptions",
-                column: "SubscriptionId");
+                column: "PriceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserSubscriptions_SubscriptionPlanId",
+                table: "UserSubscriptions",
+                column: "SubscriptionPlanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserSubscriptions_UserId",
                 table: "UserSubscriptions",
-                column: "UserId");
+                column: "UserId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -325,10 +349,10 @@ namespace Stripe.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Subscriptions");
+                name: "Prices");
 
             migrationBuilder.DropTable(
-                name: "PriceEntity");
+                name: "SubscriptionPlans");
         }
     }
 }

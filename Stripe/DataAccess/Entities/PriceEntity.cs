@@ -4,8 +4,11 @@ namespace Stripe.DataAccess.Entities;
 
 public class PriceEntity
 {
+    public int Id { get; set; }
     public string StripePriceId { get; set; }
-    public decimal PriceUsd { get; set; }
+    public decimal Price { get; set; }
+    public string Currency { get; set; }
     public PriceBillingPeriod BillingPeriod { get; set; }
-    public SubscriptionEntity Subscription { get; set; }
+    public int SubscriptionPlanId { get; set; }
+    public SubscriptionPlanEntity? SubscriptionPlan { get; set; }
 }

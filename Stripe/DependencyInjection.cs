@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Stripe.Checkout;
 using Stripe.Configuration;
 using Stripe.DataAccess;
 using Stripe.DataAccess.Entities;
@@ -33,20 +32,21 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection RegisterDependencies(this IServiceCollection services)
+    public static IServiceCollection AddDependencies(this IServiceCollection services)
     {
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ITokenService, Services.Implementations.TokenService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ISubscriptionService, Services.Implementations.SubscriptionService>();
         
-        services.AddScoped<SessionService>();
+        services.AddScoped<Stripe.Checkout.SessionService>();
+        services.AddScoped<Stripe.BillingPortal.SessionService>();
         services.AddScoped<CustomerService>();
         
         return services;
     }
     
-    public static IServiceCollection ConfigureAuth(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddAuthentication(options =>
             {

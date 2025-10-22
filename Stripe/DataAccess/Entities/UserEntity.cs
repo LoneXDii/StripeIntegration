@@ -8,5 +8,5 @@ public class UserEntity : IdentityUser
     public string? StripeId { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiresAt { get; set; }
-    public ICollection<SubscriptionEntity> Subscriptions { get; set; }
+    public UserSubscriptionEntity? UserSubscription { get; set; }
 }

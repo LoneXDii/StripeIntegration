@@ -29,14 +29,14 @@ public class SubscriptionService : ISubscriptionService
         _stripeOptions = stripeOptions.Value;
     }
 
-    public async Task<string> GetPaymentUrlAsync(int subscriptionId, CancellationToken cancellationToken)
+    public async Task<string> GetCheckoutUrlAsync(int subscriptionPriceId, CancellationToken cancellationToken)
     {
-        var subscription = await _dbContext.Subscriptions
-            .FirstOrDefaultAsync(subscription => subscription.Id == subscriptionId, cancellationToken);
+        var price = await _dbContext.Prices
+            .FirstOrDefaultAsync(price => price.Id == subscriptionPriceId, cancellationToken);
 
-        if (subscription is null)
+        if (price is null)
         {
-            throw new NotFoundException($"Subscription with id: {subscriptionId} does not exist.");
+            throw new NotFoundException($"Price with id: {subscriptionPriceId} does not exist.");
         }
         
         var stripeCustomerId = _httpContext?.User?.FindFirst("StripeId")?.Value;
@@ -46,8 +46,8 @@ public class SubscriptionService : ISubscriptionService
             throw new BadRequestException("User not found.");
         }
         
-        var paymentUrl = await _paymentService.GetPaymentUrlAsync(
-            subscription.PriceId,
+        var paymentUrl = await _paymentService.GetCheckoutUrlAsync(
+            price.StripePriceId,
             stripeCustomerId,
             cancellationToken);
         
@@ -60,7 +60,7 @@ public class SubscriptionService : ISubscriptionService
 
         if (stripeEvent.Data.Object is not Subscription subscription)
         {
-            throw new BadRequestException("Invalid event");
+            return Task.CompletedTask;
         }
 
         return stripeEvent.Type switch
@@ -68,39 +68,44 @@ public class SubscriptionService : ISubscriptionService
             EventTypes.CustomerSubscriptionCreated => ProcessSubscriptionCreationAsync(subscription, cancellationToken),
             EventTypes.CustomerSubscriptionUpdated => ProcessSubscriptionUpdateAsync(subscription, cancellationToken),
             EventTypes.CustomerSubscriptionDeleted => ProcessSubscriptionDeleteAsync(subscription, cancellationToken),
-            _ => throw new BadRequestException("Invalid event type")
         };
     }
 
     private async Task ProcessSubscriptionCreationAsync(Subscription subscription, CancellationToken cancellationToken)
     {
-        var customerId = subscription.CustomerId;
-        var productId = subscription.Items.Data[0].Plan.ProductId;
-        var stripeSubscriptionId = subscription.Id;
-        
         var userId = await _dbContext.Users
-            .Where(u => u.StripeId == customerId)
+            .Where(u => u.StripeId == subscription.CustomerId)
             .Select(u => u.Id)
             .FirstOrDefaultAsync(cancellationToken);
-            
-        var subscriptionId = await _dbContext.Subscriptions
-            .Where(s => s.StripeProductId == productId)
-            .Select(s => s.Id)
+        
+        var priceId = subscription.Items.Data[0].Price.Id;
+        
+        var subscriptionPlanAndPriceIds = await _dbContext.Prices
+            .Where(p => p.StripePriceId == priceId)
+            .Select(p => new
+            {
+                PriceId = p.Id,
+                SubscriptionPlanId = p.SubscriptionPlanId,
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (userId is null || subscriptionId == 0)
+        if (userId is null || subscriptionPlanAndPriceIds is null)
         {
-            throw new NotFoundException($"Specified user or subscription does not exist.");
+            return;
         }
-        
-        var userSubscription = new UserSubscription
+
+        var userSubscription = new UserSubscriptionEntity
         {
+            StripeSubscriptionId = subscription.Id,
+            SubscriptionStatus = subscription.Status,
+            StartDateTimeUtc = subscription.StartDate,
+            PeriodEndDateTimeUtc = subscription.CurrentPeriodEnd,
+            EndDateTimeUtc = subscription.CancelAt,
             UserId = userId,
-            SubscriptionId = subscriptionId,
-            StripeSubscriptionId = stripeSubscriptionId,
-            SubscriptionStatus = SubscriptionStatus.Active,
+            SubscriptionPlanId = subscriptionPlanAndPriceIds.SubscriptionPlanId,
+            PriceId = subscriptionPlanAndPriceIds.PriceId
         };
-            
+
         _dbContext.UserSubscriptions.Add(userSubscription);
         
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -111,15 +116,29 @@ public class SubscriptionService : ISubscriptionService
         var userSubscription = await _dbContext.UserSubscriptions
             .FirstOrDefaultAsync(us => us.StripeSubscriptionId == subscription.Id, cancellationToken);
 
-        if (userSubscription is null)
-        {
-            throw new NotFoundException($"Subscription with id: {subscription.Id} does not exist.");
-        }
+        var priceId = subscription.Items.Data[0].Price.Id;
         
-        userSubscription.SubscriptionStatus = subscription.CancelAt is null 
-            ? SubscriptionStatus.Active 
-            : SubscriptionStatus.Disabled;
-            
+        var subscriptionPlanAndPriceIds = await _dbContext.Prices
+            .Where(p => p.StripePriceId == priceId)
+            .Select(p => new
+            {
+                PriceId = p.Id,
+                SubscriptionPlanId = p.SubscriptionPlanId,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        
+        if (userSubscription is null || subscriptionPlanAndPriceIds is null)
+        {
+            return;
+        }
+
+        userSubscription.SubscriptionStatus = subscription.Status;
+        userSubscription.StartDateTimeUtc = subscription.StartDate;
+        userSubscription.PeriodEndDateTimeUtc = subscription.CurrentPeriodEnd;
+        userSubscription.EndDateTimeUtc = subscription.CancelAt;
+        userSubscription.SubscriptionPlanId = subscriptionPlanAndPriceIds.SubscriptionPlanId;
+        userSubscription.PriceId = subscriptionPlanAndPriceIds.PriceId;
+        
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -130,7 +149,7 @@ public class SubscriptionService : ISubscriptionService
             
         if (userSubscription is null)
         {
-            throw new NotFoundException($"Subscription with id: {subscription.Id} does not exist.");
+            return;
         }
         
         _dbContext.UserSubscriptions.Remove(userSubscription);

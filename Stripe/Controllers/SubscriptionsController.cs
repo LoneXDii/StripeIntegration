@@ -8,25 +8,42 @@ using Stripe.Services.Interfaces;
 namespace Stripe.Controllers;
 
 [ApiController]
-[Route("/subscriptions")]
+[Route("subscriptions")]
 public class SubscriptionController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;
-
-    public SubscriptionController(ISubscriptionService subscriptionService)
+    private readonly IPaymentService _paymentService;
+    
+    public SubscriptionController(
+        ISubscriptionService subscriptionService,
+        IPaymentService paymentService)
     {
         _subscriptionService = subscriptionService;
+        _paymentService = paymentService;
     }
 
-    [HttpGet("{id:int}/payment")]
+    [HttpGet("{id:int}/checkout")]
     [Authorize]
-    public async Task<ActionResult> GetPaymentUrlAsync(
+    public async Task<IActionResult> GetCheckoutUrlAsync(
         [FromRoute] int id,
         CancellationToken cancellationToken)
     {
-        var paymentUrl = await _subscriptionService.GetPaymentUrlAsync(id, cancellationToken);
+        var checkoutUrl = await _subscriptionService.GetCheckoutUrlAsync(id, cancellationToken);
         
-        return Redirect(paymentUrl);
+        return Ok(checkoutUrl);
+        //return Redirect(checkoutUrl);
+    }
+
+    [HttpGet("management")]
+    [Authorize]
+    public async Task<IActionResult> GetCustomerPortalUrlAsync(CancellationToken cancellationToken)
+    {
+        var stripeId = User.FindFirst("StripeId")?.Value;
+        
+        var billingPortalUrl = await _paymentService.GetCustomerPortalUrlAsync(stripeId, cancellationToken);
+        
+        return Ok(billingPortalUrl);
+        //return Redirect(billingPortalUrl);
     }
     
     [HttpPost("webhook")]

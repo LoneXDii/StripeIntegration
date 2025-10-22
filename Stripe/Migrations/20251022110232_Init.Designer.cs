@@ -12,7 +12,7 @@ using Stripe.DataAccess;
 namespace Stripe.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251021100143_Init")]
+    [Migration("20251022110232_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -159,41 +159,93 @@ namespace Stripe.Migrations
 
             modelBuilder.Entity("Stripe.DataAccess.Entities.PriceEntity", b =>
                 {
-                    b.Property<string>("StripePriceId")
-                        .HasColumnType("text");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BillingPeriod")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("PriceUsd")
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
-                    b.HasKey("StripePriceId");
+                    b.Property<string>("StripePriceId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.ToTable("PriceEntity");
+                    b.Property<int>("SubscriptionPlanId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionPlanId");
+
+                    b.ToTable("Prices");
 
                     b.HasData(
                         new
                         {
-                            StripePriceId = "price_1SJDObCLnke0wpITy9PHxVxK",
+                            Id = 1,
                             BillingPeriod = 2,
-                            PriceUsd = 10m
+                            Currency = "USD",
+                            Price = 5m,
+                            StripePriceId = "price_1SKy0qCLnke0wpIT5p6NYVQw",
+                            SubscriptionPlanId = 1
                         },
                         new
                         {
-                            StripePriceId = "price_1SJDOtCLnke0wpITTywacmtv",
-                            BillingPeriod = 2,
-                            PriceUsd = 15m
-                        },
-                        new
-                        {
-                            StripePriceId = "price_1SJDPHCLnke0wpITkJq26ra0",
+                            Id = 2,
                             BillingPeriod = 3,
-                            PriceUsd = 50m
+                            Currency = "USD",
+                            Price = 50m,
+                            StripePriceId = "price_1SJDPHCLnke0wpITkJq26ra0",
+                            SubscriptionPlanId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BillingPeriod = 2,
+                            Currency = "USD",
+                            Price = 10m,
+                            StripePriceId = "price_1SJDObCLnke0wpITy9PHxVxK",
+                            SubscriptionPlanId = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BillingPeriod = 3,
+                            Currency = "USD",
+                            Price = 100m,
+                            StripePriceId = "price_1SKy3hCLnke0wpITi2xo7uBT",
+                            SubscriptionPlanId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            BillingPeriod = 2,
+                            Currency = "USD",
+                            Price = 15m,
+                            StripePriceId = "price_1SJDOtCLnke0wpITTywacmtv",
+                            SubscriptionPlanId = 3
+                        },
+                        new
+                        {
+                            Id = 6,
+                            BillingPeriod = 3,
+                            Currency = "USD",
+                            Price = 150m,
+                            StripePriceId = "price_1SKy34CLnke0wpITpjafca5U",
+                            SubscriptionPlanId = 3
                         });
                 });
 
-            modelBuilder.Entity("Stripe.DataAccess.Entities.SubscriptionEntity", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.SubscriptionPlanEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -202,42 +254,35 @@ namespace Stripe.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PriceId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("StripeProductId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PriceId")
-                        .IsUnique();
-
-                    b.ToTable("Subscriptions");
+                    b.ToTable("SubscriptionPlans");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            Name = "TestSubscriptionMonthly-1",
-                            PriceId = "price_1SJDObCLnke0wpITy9PHxVxK",
-                            StripeProductId = "prod_TFiqgpwQsYS69k"
+                            Name = "Base",
+                            StripeProductId = "prod_TFiqRZlgyUG3cJ"
                         },
                         new
                         {
                             Id = 2,
-                            Name = "TestSubscriptionMonthly-2",
-                            PriceId = "price_1SJDOtCLnke0wpITTywacmtv",
-                            StripeProductId = "prod_TFiqBLnYKGafcO"
+                            Name = "Premium",
+                            StripeProductId = "prod_TFiqgpwQsYS69k"
                         },
                         new
                         {
                             Id = 3,
-                            Name = "TestSubscriptionYearly-1",
-                            PriceId = "price_1SJDPHCLnke0wpITkJq26ra0",
-                            StripeProductId = "prod_TFiqRZlgyUG3cJ"
+                            Name = "Ultra",
+                            StripeProductId = "prod_TFiqBLnYKGafcO"
                         });
                 });
 
@@ -261,9 +306,11 @@ namespace Stripe.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -320,26 +367,49 @@ namespace Stripe.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Stripe.DataAccess.Entities.UserSubscription", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.UserSubscriptionEntity", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("EndDateTimeUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("PeriodEndDateTimeUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PriceId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartDateTimeUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("StripeSubscriptionId")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SubscriptionId")
+                    b.Property<int>("SubscriptionPlanId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("SubscriptionStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("SubscriptionStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("StripeSubscriptionId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("SubscriptionId");
+                    b.HasIndex("PriceId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("SubscriptionPlanId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("UserSubscriptions");
                 });
@@ -395,37 +465,54 @@ namespace Stripe.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Stripe.DataAccess.Entities.SubscriptionEntity", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.PriceEntity", b =>
                 {
-                    b.HasOne("Stripe.DataAccess.Entities.PriceEntity", "Price")
-                        .WithOne("Subscription")
-                        .HasForeignKey("Stripe.DataAccess.Entities.SubscriptionEntity", "PriceId");
+                    b.HasOne("Stripe.DataAccess.Entities.SubscriptionPlanEntity", "SubscriptionPlan")
+                        .WithMany("Prices")
+                        .HasForeignKey("SubscriptionPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Price");
+                    b.Navigation("SubscriptionPlan");
                 });
 
-            modelBuilder.Entity("Stripe.DataAccess.Entities.UserSubscription", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.UserSubscriptionEntity", b =>
                 {
-                    b.HasOne("Stripe.DataAccess.Entities.SubscriptionEntity", "Subscription")
+                    b.HasOne("Stripe.DataAccess.Entities.PriceEntity", "Price")
                         .WithMany()
-                        .HasForeignKey("SubscriptionId")
+                        .HasForeignKey("PriceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stripe.DataAccess.Entities.SubscriptionPlanEntity", "SubscriptionPlan")
+                        .WithMany("UserSubscriptions")
+                        .HasForeignKey("SubscriptionPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Stripe.DataAccess.Entities.UserEntity", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .WithOne("UserSubscription")
+                        .HasForeignKey("Stripe.DataAccess.Entities.UserSubscriptionEntity", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Subscription");
+                    b.Navigation("Price");
+
+                    b.Navigation("SubscriptionPlan");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Stripe.DataAccess.Entities.PriceEntity", b =>
+            modelBuilder.Entity("Stripe.DataAccess.Entities.SubscriptionPlanEntity", b =>
                 {
-                    b.Navigation("Subscription");
+                    b.Navigation("Prices");
+
+                    b.Navigation("UserSubscriptions");
+                });
+
+            modelBuilder.Entity("Stripe.DataAccess.Entities.UserEntity", b =>
+                {
+                    b.Navigation("UserSubscription");
                 });
 #pragma warning restore 612, 618
         }

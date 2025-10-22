@@ -2,5 +2,6 @@
 
 public interface IPaymentService
 {
-    Task<string> GetPaymentUrlAsync(string stripePriceId, string stripeCustomerId, CancellationToken cancellationToken);
+    Task<string> GetCheckoutUrlAsync(string stripePriceId, string stripeCustomerId, CancellationToken cancellationToken);
+    Task<string> GetCustomerPortalUrlAsync(string stripeCustomerId, CancellationToken cancellationToken);
 }

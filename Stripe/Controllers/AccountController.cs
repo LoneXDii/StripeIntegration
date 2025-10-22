@@ -7,7 +7,7 @@ using Stripe.Services.Interfaces;
 namespace Stripe.Controllers;
 
 [ApiController]
-[Route("/account")]
+[Route("account")]
 public class AccountController : ControllerBase
 {
     private readonly IUserService _userService;

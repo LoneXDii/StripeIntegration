@@ -11,8 +11,9 @@ public class AppDbContext : IdentityDbContext<UserEntity>
     { }  
     
     public DbSet<UserEntity> Users { get; set; }
-    public DbSet<SubscriptionEntity> Subscriptions { get; set; }
-    public DbSet<UserSubscription> UserSubscriptions { get; set; }
+    public DbSet<SubscriptionPlanEntity> SubscriptionPlans { get; set; }
+    public DbSet<PriceEntity> Prices { get; set; }
+    public DbSet<UserSubscriptionEntity> UserSubscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
