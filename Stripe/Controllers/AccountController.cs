@@ -7,7 +7,7 @@ using Stripe.Services.Interfaces;
 namespace Stripe.Controllers;
 
 [ApiController]
-[Route("account")]
+[Route("api/account")]
 public class AccountController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -17,7 +17,7 @@ public class AccountController : ControllerBase
         _userService = userService;
     }
     
-    [HttpPost("login")]
+    [HttpPost("tokens/connect")]
     public async Task<IActionResult> LoginAsync(
         [FromBody] LoginDto loginDto,
         CancellationToken cancellationToken)

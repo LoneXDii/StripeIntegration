@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using Stripe.Configuration;
 using Stripe.DataAccess;
 using Stripe.DataAccess.Entities;
+using Stripe.Mappers.Implementations;
+using Stripe.Mappers.Interfaces;
 using Stripe.Services.Implementations;
 using Stripe.Services.Interfaces;
 
@@ -17,7 +19,7 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("Postgres");
         
-        services.AddDbContext<AppDbContext>(opt => 
+        services.AddDbContext<IDbContext, AppDbContext>(opt => 
             opt.UseNpgsql(connectionString, opt => opt.EnableRetryOnFailure()));
 
         services.AddIdentity<UserEntity, IdentityRole>()
@@ -27,14 +29,14 @@ public static class DependencyInjection
         services.Configure<StripeOptions>(options => configuration.GetSection("Stripe").Bind(options))
             .Configure<JwtOptions>(options => configuration.GetSection("Jwt").Bind(options));
         
-        StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
+        StripeConfiguration.ApiKey = configuration["Stripe:ApiKey"];
         
         return services;
     }
 
     public static IServiceCollection AddDependencies(this IServiceCollection services)
     {
-        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IStripeService, StripeService>();
         services.AddScoped<ITokenService, Services.Implementations.TokenService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ISubscriptionService, Services.Implementations.SubscriptionService>();
@@ -42,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<Stripe.Checkout.SessionService>();
         services.AddScoped<Stripe.BillingPortal.SessionService>();
         services.AddScoped<CustomerService>();
+
+        services.AddScoped<ISubscriptionPlanMapper, SubscriptionPlanMapper>();
         
         return services;
     }

@@ -4,7 +4,7 @@ using Stripe.DataAccess.Entities;
 
 namespace Stripe.DataAccess;
 
-public class AppDbContext : IdentityDbContext<UserEntity>
+public class AppDbContext : IdentityDbContext<UserEntity>, IDbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) 
         : base(options) 

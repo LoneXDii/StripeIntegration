@@ -1,7 +1,9 @@
-﻿namespace Stripe.Services.Interfaces;
+﻿using Stripe.Dto;
+
+namespace Stripe.Services.Interfaces;
 
 public interface ISubscriptionService
 {
-    Task<string> GetCheckoutUrlAsync(int subscriptionId, CancellationToken cancellationToken);
-    Task ProcessWebhookAsync(string eventJson, string signature, CancellationToken cancellationToken);
+    Task<string> GetCheckoutUrlAsync(int subscriptionId, string stripeCustomerId, CancellationToken cancellationToken);
+    Task<List<SubscriptionPlanDto>> GetSubscriptionPlansAsync(CancellationToken cancellationToken);
 }
