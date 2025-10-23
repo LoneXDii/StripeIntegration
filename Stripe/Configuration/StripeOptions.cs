@@ -3,7 +3,7 @@
 public class StripeOptions
 {
     public string WebhookSecret { get; set; }
-    public string SuccessUrl { get; set; }
-    public string CancelUrl { get; set; }
-    public string CustomerPortalConfigurationId { get; set; }
+    public string CheckoutSuccessUrl { get; set; }
+    public string CheckoutCancelUrl { get; set; }
+    public string CustomerPortalReturnUrl { get; set; }
 }

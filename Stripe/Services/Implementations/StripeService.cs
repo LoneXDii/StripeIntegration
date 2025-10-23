@@ -45,8 +45,8 @@ internal class StripeService : IStripeService
                 }
             ],
             Customer = stripeCustomerId,
-            SuccessUrl = _stripeOptions.SuccessUrl,
-            CancelUrl = _stripeOptions.CancelUrl,
+            SuccessUrl = _stripeOptions.CheckoutSuccessUrl,
+            CancelUrl = _stripeOptions.CheckoutCancelUrl,
         };
         
         var session = await _checkoutSessionService.CreateAsync(options, cancellationToken: cancellationToken);
@@ -57,7 +57,7 @@ internal class StripeService : IStripeService
     public async Task<string> GetCustomerPortalUrlAsync(string stripeCustomerId, CancellationToken cancellationToken)
     {
         var isUserAlreadySubscribed = await _dbContext.Users
-            .AnyAsync(u => u.StripeId == stripeCustomerId && u.UserSubscription == null, cancellationToken);
+            .AnyAsync(u => u.StripeId == stripeCustomerId && u.UserSubscription != null, cancellationToken);
 
         if (!isUserAlreadySubscribed)
         {
@@ -67,15 +67,13 @@ internal class StripeService : IStripeService
         var option = new BillingPortal.SessionCreateOptions
         {
             Customer = stripeCustomerId,
-            ReturnUrl = _stripeOptions.SuccessUrl,
-            Configuration = _stripeOptions.CustomerPortalConfigurationId
+            ReturnUrl = _stripeOptions.CustomerPortalReturnUrl
         };
 
         var session = await _billingPortalSessionService.CreateAsync(option, cancellationToken: cancellationToken);
         
         return session.Url;
     }
-    
     
     public Task ProcessSubscriptionsWebhookAsync(string eventJson, string signature, CancellationToken cancellationToken)
     {

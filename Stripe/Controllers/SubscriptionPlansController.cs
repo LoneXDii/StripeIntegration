@@ -35,12 +35,11 @@ public class SubscriptionController : ControllerBase
         [FromRoute] int priceId,
         CancellationToken cancellationToken)
     {
-        var  stripeCustomerId = HttpContext.User.FindFirst("StripeId")?.Value;
+        var stripeCustomerId = HttpContext.User.FindFirst("StripeId")?.Value;
         
         var checkoutUrl = await _subscriptionService.GetCheckoutUrlAsync(priceId, stripeCustomerId, cancellationToken);
         
-        return Ok(checkoutUrl);
-        //return Redirect(checkoutUrl);
+        return Redirect(checkoutUrl);
     }
 
     [HttpGet("management")]
@@ -51,7 +50,6 @@ public class SubscriptionController : ControllerBase
         
         var billingPortalUrl = await _stripeService.GetCustomerPortalUrlAsync(stripeId, cancellationToken);
         
-        return Ok(billingPortalUrl);
-        //return Redirect(billingPortalUrl);
+        return Redirect(billingPortalUrl);
     }
 }
